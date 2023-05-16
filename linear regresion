@@ -1,0 +1,39 @@
+#include <iostream>
+#include <vector>
+#include <omp.h>
+
+using namespace std;
+
+double linear_regression(const vector<double>& x, const vector<double>& y) {
+    double x_mean = 0, y_mean = 0;
+    int n = x.size();
+
+    #pragma omp parallel for reduction(+: x_mean, y_mean)
+    for (int i = 0; i < n; i++) {
+        x_mean += x[i];
+        y_mean += y[i];
+    }
+
+    x_mean /= n;
+    y_mean /= n;
+
+    double numerator = 0, denominator = 0;
+
+    #pragma omp parallel for reduction(+: numerator, denominator)
+    for (int i = 0; i < n; i++) {
+        numerator += (x[i] - x_mean) * (y[i] - y_mean);
+        denominator += (x[i] - x_mean) * (x[i] - x_mean);
+    }
+
+    return numerator / denominator;
+}
+
+int main() {
+    vector<double> x = {1, 2, 3, 4, 5};
+    vector<double> y = {2, 4, 6, 8, 10};
+
+    double result = linear_regression(x, y);
+    cout << "The slope of the linear regression line is " << result << endl;
+
+    return 0;
+}
